@@ -2,6 +2,9 @@ lockfileVersion: 5.4
 
 specifiers:
   '@types/node': ^20.3.1
+  '@types/xml2js': ^0.4.11
+  prettier: ^2.8.8
+  prettier-plugin-sort-json: ^1.0.0
   vite-node: ^0.32.2
   xml2js: ^0.6.0
 
@@ -10,6 +13,9 @@ dependencies:
 
 devDependencies:
   '@types/node': 20.3.1
+  '@types/xml2js': 0.4.11
+  prettier: 2.8.8
+  prettier-plugin-sort-json: 1.0.0_prettier@2.8.8
   vite-node: 0.32.2_@types+node@20.3.1
 
 packages:
@@ -216,6 +222,16 @@ packages:
     resolution: {integrity: sha512-EhcH/wvidPy1WeML3TtYFGR83UzjxeWRen9V402T8aUGYsCHOmfoisV3ZSg03gAFIbLq8TnWOJ0f4cALtnSEUg==}
     dev: true
 
+  /@types/prettier/2.7.3:
+    resolution: {integrity: sha512-+68kP9yzs4LMp7VNh8gdzMSPZFL44MLGqiHWvttYJe+6qnuVr4Ek9wSBQoveqY/r+LwjCcU29kNVkidwim+kYA==}
+    dev: true
+
+  /@types/xml2js/0.4.11:
+    resolution: {integrity: sha512-JdigeAKmCyoJUiQljjr7tQG3if9NkqGUgwEUqBvV0N7LM4HyQk7UXCnusRa1lnvXAEYJ8mw8GtZWioagNztOwA==}
+    dependencies:
+      '@types/node': 20.3.1
+    dev: true
+
   /acorn/8.9.0:
     resolution: {integrity: sha512-jaVNAFBHNLXspO543WnNNPZFRtavh3skAkITqD0/2aeMkKZTN+254PyhwxFYrk3vQ1xfY+2wbesJMs/JC8/PwQ==}
     engines: {node: '>=0.4.0'}
@@ -323,6 +339,22 @@ packages:
       nanoid: 3.3.6
       picocolors: 1.0.0
       source-map-js: 1.0.2
+    dev: true
+
+  /prettier-plugin-sort-json/1.0.0_prettier@2.8.8:
+    resolution: {integrity: sha512-XgcaF/Sojax1vD6j53wNIByx0rp7ecang+A8W0eM+Ks3yBFu/qXjJNvUtC1lEWeYbNfmRs/d8FyYJCYozAVENw==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      prettier: ^2.3.2
+    dependencies:
+      '@types/prettier': 2.7.3
+      prettier: 2.8.8
+    dev: true
+
+  /prettier/2.8.8:
+    resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
     dev: true
 
   /rollup/3.25.1:

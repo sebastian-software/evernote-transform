@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Shared Config",
+  "compilerOptions": {
+    // Recommended:
+    // https://github.com/tsconfig/bases/blob/main/bases/recommended.json
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Create React App:
+    // https://github.com/tsconfig/bases/blob/main/bases/create-react-app.json
+    "module": "esnext",
+    "allowJs": true,
+    // To provide backwards compatibility, Node.js allows you to import most CommonJS packages with a default import.
+    // This flag tells TypeScript that it's okay to use import on CommonJS modules.
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+
+    "moduleResolution": "node",
+    // This setting would allow for "exports" working correctly in our "api".
+    // Unfortunately this also breaks a few modules like viteReact, SWR, etc.
+    // Therefor we live with the "/lib/" sub folder segment for API imports for the moment.
+    // "@enpxawb/apis-rest-ts/lib/contracting_v2" (CURRENT) => @enpxawb/apis-rest-ts/contracting_v2 (MODERN)
+    // "moduleResolution": "node16",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // Sindre Sorhus
+    // https://github.com/sindresorhus/tsconfig
+    "target": "ES2020", // Node.js 14
+    "lib": ["dom", "dom.iterable", "ES2020"],
+    "resolveJsonModule": false, // ESM doesn't yet support JSON modules.
+    "declaration": true,
+    "pretty": true,
+    "newLine": "lf",
+    "stripInternal": true,
+    "noUnusedLocals": true,
+    "noEmitOnError": true,
+    "useDefineForClassFields": true
+  }
+}

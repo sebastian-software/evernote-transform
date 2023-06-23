@@ -1,6 +1,6 @@
 # Evertransform
 
-We are long-time users of the note management system Evernote. We used it primarily for central storage of business documents and accounting records. Our intended use has certainly been a bit specific: We each have a note for a scanned PDF. And the title usually corresponds to the PDF. Relevant for the date for us is usually the creation date of the note (even if this is sometimes marginally later than the original receipt or invoice date).
+We are long-time users of the note management system Evernote. We used it primarily for central storage of business documents and accounting records. Our intended use has certainly been a bit specific: We have a note for each scanned PDF. And the title usually corresponds to the PDF. Relevant for the date for us is usually the creation date of the note (even if this is sometimes marginally later than the original receipt or invoice date).
 
 Unfortunately, the further development is currently not necessarily to be seen as fast-paced and we have been dealing with a replacement for some time. Our tax consultant was leaning towards using DATEV Unternehmen Online for accounting. For everything else, we will probably rely on a new simpler solution in the future, since the migration of the accounting data will require significantly less "tooling". So for a first step, we needed a tool that would allow us to extract the previous data set from Evernote.
 

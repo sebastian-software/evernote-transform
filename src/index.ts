@@ -45,40 +45,40 @@ async function saveAsJson(notes: EvernoteNotes, output: string): Promise<void> {
 }
 
 type ExtractedInfo = {
-  date?: string;
-  title: string;
-};
+  date?: string
+  title: string
+}
 
 function cleanupTitle(input: string): string {
   // replace all dashes with spaces
-  let stringWithSpaces = input.replace(/[-_,<>:"/\\|?*]/g, ' ');
+  let stringWithSpaces = input.replace(/[-_,<>:"/\\|?*]/g, " ")
 
   // replace all multiple spaces with a single space
-  let stringWithSingleSpaces = stringWithSpaces.replace(/\s+/g, ' ');
+  let stringWithSingleSpaces = stringWithSpaces.replace(/\s+/g, " ")
 
   // trim the string
-  let trimmedString = stringWithSingleSpaces.trim();
+  let trimmedString = stringWithSingleSpaces.trim()
 
-  return trimmedString;
+  return trimmedString
 }
 
 function extractTitleDate(inputString: string | number): ExtractedInfo {
-  if (typeof inputString !== 'string') {
-    inputString = inputString.toString();
+  if (typeof inputString !== "string") {
+    inputString = inputString.toString()
   }
 
-  const regex = /\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b/;
-  const match = inputString.match(regex);
+  const regex = /\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b/
+  const match = inputString.match(regex)
 
-  let date: string | undefined;
-  let title: string = inputString;
+  let date: string | undefined
+  let title: string = inputString
 
   if (match) {
-    date = match[0];
-    title = inputString.replace(regex, '')
+    date = match[0]
+    title = inputString.replace(regex, "")
   }
 
-  return { date, title: cleanupTitle(title) };
+  return { date, title: cleanupTitle(title) }
 }
 
 function convertNoteDate(inputDate: string): string {
@@ -115,7 +115,10 @@ function convertGermanDate(inputDate?: string): string | undefined {
   const [day, month, year] = inputDate.split(".")
 
   // Format the date string as 'year-month-day'
-  const formattedDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+  const formattedDate = `${year}-${month.padStart(2, "0")}-${day.padStart(
+    2,
+    "0"
+  )}`
 
   return formattedDate
 }
@@ -130,9 +133,14 @@ async function extractResource(resource: EvernoteResource, distPath: string) {
 }
 
 async function extractNote(note: EvernoteNote, distPrefix: string) {
-  const { title, date } = extractTitleDate(note.title ?? "");
+  const { title, date } = extractTitleDate(note.title ?? "")
   const usableDate = convertGermanDate(date) || convertNoteDate(note.created)
-  const distPath = path.join(distPrefix, usableDate.slice(0,4), usableDate.slice(5,7), `${usableDate} ${title}`)
+  const distPath = path.join(
+    distPrefix,
+    usableDate.slice(0, 4),
+    usableDate.slice(5, 7),
+    `${usableDate} ${title}`
+  )
 
   if (!note.resource) {
     console.warn(`No resource data found: ${note.title}`)
@@ -163,10 +171,15 @@ async function batchConvert(source: string, dist: string): Promise<void> {
     await fs.rm(outputFolder, { recursive: true, force: true })
 
     console.log(">>> Parsing Evernote file...")
-    const root: EvernoteExport = await parseEvernoteFile(path.join(source, file))
+    const root: EvernoteExport = await parseEvernoteFile(
+      path.join(source, file)
+    )
     const notes = root.note
 
-    const jsonPath = path.join(outputFolder, path.basename(file, ".enex") + ".json")
+    const jsonPath = path.join(
+      outputFolder,
+      path.basename(file, ".enex") + ".json"
+    )
     console.log(`>>> Saving JSON file ${jsonPath}...`)
     await saveAsJson(notes, jsonPath)
 

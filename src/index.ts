@@ -164,7 +164,8 @@ async function batchConvert(source: string, dist: string): Promise<void> {
     console.log(`  FILE: ${file}`)
     console.log("=====================================")
 
-    const baseFileName = file.replace(".enex", "")
+    // Remove the file extension and any trailing numbers (file chunks)
+    const baseFileName = file.replace(".enex", "").replace(/\s+[0-9]+$/, "")
     const outputFolder = path.resolve(path.join(dist, baseFileName))
 
     console.log(`>>> Deleting output folder ${outputFolder}...`)

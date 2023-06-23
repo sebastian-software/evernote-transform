@@ -15,7 +15,7 @@ interface EvernoteNote {
   created: string // this could be represented as a Date object too, depending on your needs
   updated: string // this could be represented as a Date object too, depending on your needs
   tags?: string[] // optional array of tag strings
-  resource: EvernoteResource // the note content, usually in HTML form
+  resource: EvernoteResource | EvernoteResource[] // the note content, usually in HTML form
   attributes?: {
     sourceURL?: string // optional URL of note source
   }
@@ -34,11 +34,6 @@ const getEvernoteFiles = async (dir: string): Promise<string[]> => {
   return dirs.filter((file) => path.extname(file).toLowerCase() === ".enex")
 }
 
-function makeFileSystemSafe(input: string): string {
-  const unsafeCharacters = /[<>:"/\\|?*]/g
-  return input.replace(unsafeCharacters, "_")
-}
-
 async function parseEvernoteFile(filePath: string): Promise<any> {
   const data = await fs.readFile(filePath, "utf8")
   return parser.parse(data)["en-export"]
@@ -49,38 +44,30 @@ async function saveAsJson(notes: EvernoteNotes, output: string): Promise<void> {
   await fs.writeFile(output, JSON.stringify(notes, null, 2))
 }
 
-async function processFile(resource: EvernoteResource, resourceIndex: number) {
-  console.log(
-    ">>> RESOURCE:",
-    resource.resourceAttributes.fileName,
-    resource.mime
-  )
-
-  if (resource.mime[0] === "application/pdf") {
-    const pdfData = Buffer.from(resource.data[0]._, "base64")
-    const pdfTitle = makeFileSystemSafe(title)
-    const pdfFile = path.join(
-      dir,
-      "output",
-      `${path.basename(
-        file,
-        ".enex"
-      )}_note_${index}_resource_${resourceIndex}_${pdfTitle}.pdf`
-    )
-    await fs.mkdir(path.dirname(pdfFile), { recursive: true })
-    await fs.writeFile(pdfFile, pdfData)
-  } else {
-    console.warn("Found other attachment!")
-  }
-}
-
 type ExtractedInfo = {
   date?: string;
   title: string;
 };
 
-function extractTitleDate(inputString: string): ExtractedInfo {
-  const regex = /\b(\d{2})\.(\d{2})\.(\d{4})\b/;
+function cleanupTitle(input: string): string {
+  // replace all dashes with spaces
+  let stringWithSpaces = input.replace(/[-_,<>:"/\\|?*]/g, ' ');
+
+  // replace all multiple spaces with a single space
+  let stringWithSingleSpaces = stringWithSpaces.replace(/\s+/g, ' ');
+
+  // trim the string
+  let trimmedString = stringWithSingleSpaces.trim();
+
+  return trimmedString;
+}
+
+function extractTitleDate(inputString: string | number): ExtractedInfo {
+  if (typeof inputString !== 'string') {
+    inputString = inputString.toString();
+  }
+
+  const regex = /\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b/;
   const match = inputString.match(regex);
 
   let date: string | undefined;
@@ -88,10 +75,10 @@ function extractTitleDate(inputString: string): ExtractedInfo {
 
   if (match) {
     date = match[0];
-    title = inputString.replace(regex, '').trim();
+    title = inputString.replace(regex, '')
   }
 
-  return { date, title };
+  return { date, title: cleanupTitle(title) };
 }
 
 function convertNoteDate(inputDate: string): string {
@@ -128,44 +115,66 @@ function convertGermanDate(inputDate?: string): string | undefined {
   const [day, month, year] = inputDate.split(".")
 
   // Format the date string as 'year-month-day'
-  const formattedDate = `${year}-${month}-${day}`
+  const formattedDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
 
   return formattedDate
 }
 
-async function extractNote(note: EvernoteNote) {
-  const { title, date } = extractTitleDate(note.title ?? "");
-  const usableDate = convertGermanDate(date) || convertNoteDate(note.created)
-  const distPath = `${usableDate.slice(0,4)}/${usableDate.slice(5,7)}/${usableDate} ${title}`
+async function extractResource(resource: EvernoteResource, distPath: string) {
+  const pdfData = Buffer.from(resource.data, "base64")
+  const pdfDist = `${distPath}.pdf`
 
-  console.log(">>> NOTE:", usableDate, title, "=>", distPath)
+  console.log(`>>> Saving PDF: ${pdfDist}...`)
+  await fs.mkdir(path.dirname(pdfDist), { recursive: true })
+  await fs.writeFile(pdfDist, pdfData)
 }
 
-async function extractNotes(notes: EvernoteNotes): Promise<void> {
-  for (const note of notes) {
-    await extractNote(note)
+async function extractNote(note: EvernoteNote, distPrefix: string) {
+  const { title, date } = extractTitleDate(note.title ?? "");
+  const usableDate = convertGermanDate(date) || convertNoteDate(note.created)
+  const distPath = path.join(distPrefix, usableDate.slice(0,4), usableDate.slice(5,7), `${usableDate} ${title}`)
+
+  if (!note.resource) {
+    console.warn(`No resource data found: ${note.title}`)
+    return
+  }
+
+  if (Array.isArray(note.resource)) {
+    for (const resource of note.resource) {
+      await extractResource(resource, distPath)
+    }
+  } else {
+    await extractResource(note.resource, distPath)
   }
 }
 
-async function batchConvert(dir: string, files: string[]): Promise<void> {
+async function batchConvert(source: string, dist: string): Promise<void> {
+  const files = await getEvernoteFiles(source)
+
   for (const file of files) {
     console.log("=====================================")
     console.log(`  FILE: ${file}`)
     console.log("=====================================")
 
-    const filePath = path.join(dir, file)
-    const root: EvernoteExport = await parseEvernoteFile(filePath)
+    const baseFileName = file.replace(".enex", "")
+    const outputFolder = path.resolve(path.join(dist, baseFileName))
+
+    console.log(`>>> Deleting output folder ${outputFolder}...`)
+    await fs.rm(outputFolder, { recursive: true, force: true })
+
+    console.log(">>> Parsing Evernote file...")
+    const root: EvernoteExport = await parseEvernoteFile(path.join(source, file))
     const notes = root.note
 
-    const jsonPath = filePath.replace(".enex", ".json")
+    const jsonPath = path.join(outputFolder, path.basename(file, ".enex") + ".json")
+    console.log(`>>> Saving JSON file ${jsonPath}...`)
     await saveAsJson(notes, jsonPath)
-    await extractNotes(notes)
 
-    throw new Error("OOOPS")
+    console.log(">>> Extracting notes to ${outputFolder}...")
+    for (const note of notes) {
+      await extractNote(note, outputFolder)
+    }
   }
 }
 
-const dir = "./data" // Your directory with ENEX files
-
-const enexFiles = await getEvernoteFiles(dir)
-batchConvert(dir, enexFiles)
+await batchConvert("./data", "./dist")

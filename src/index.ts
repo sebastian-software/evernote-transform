@@ -1,6 +1,7 @@
 import fs from "node:fs/promises"
 import path from "path"
 import { XMLParser } from "fast-xml-parser"
+import { createHash } from "crypto"
 
 interface EvernoteResource {
   data: string // this is the base64 encoded data of the resource
@@ -123,13 +124,24 @@ function convertGermanDate(inputDate?: string): string | undefined {
   return formattedDate
 }
 
+function getHash(data: string): string {
+  const hash = createHash('sha1');
+  hash.update(data);
+  return hash.digest('hex').slice(0, 6);
+}
+
 async function extractResource(resource: EvernoteResource, distPath: string) {
   const pdfData = Buffer.from(resource.data, "base64")
-  const pdfDist = `${distPath}.pdf`
+  const pdfHash = getHash(resource.data)
+  const pdfDist = `${distPath} ${pdfHash}.pdf`
 
   console.log(`>>> Saving PDF: ${pdfDist}...`)
   await fs.mkdir(path.dirname(pdfDist), { recursive: true })
-  await fs.writeFile(pdfDist, pdfData)
+  try {
+    await fs.writeFile(pdfDist, pdfData, { flag: "wx"})
+  } catch(error) {
+    console.warn(`>>> Unable to write file: ${error.message}!`)
+  }
 }
 
 async function extractNote(note: EvernoteNote, distPrefix: string) {
@@ -159,17 +171,17 @@ async function extractNote(note: EvernoteNote, distPrefix: string) {
 async function batchConvert(source: string, dist: string): Promise<void> {
   const files = await getEvernoteFiles(source)
 
+  console.log(`>>> Deleting output folder ${dist}...`)
+  await fs.rm(dist, { recursive: true, force: true })
+
   for (const file of files) {
     console.log("=====================================")
     console.log(`  FILE: ${file}`)
     console.log("=====================================")
 
     // Remove the file extension and any trailing numbers (file chunks)
-    const baseFileName = file.replace(".enex", "").replace(/\s+[0-9]+$/, "")
+    const baseFileName = file.replace(".enex", "").replace(/[\s\.][0-9]+$/, "")
     const outputFolder = path.resolve(path.join(dist, baseFileName))
-
-    console.log(`>>> Deleting output folder ${outputFolder}...`)
-    await fs.rm(outputFolder, { recursive: true, force: true })
 
     console.log(">>> Parsing Evernote file...")
     const root: EvernoteExport = await parseEvernoteFile(
@@ -184,7 +196,7 @@ async function batchConvert(source: string, dist: string): Promise<void> {
     console.log(`>>> Saving JSON file ${jsonPath}...`)
     await saveAsJson(notes, jsonPath)
 
-    console.log(">>> Extracting notes to ${outputFolder}...")
+    console.log(`>>> Extracting ${notes.length} notes to ${outputFolder}...`)
     for (const note of notes) {
       await extractNote(note, outputFolder)
     }
